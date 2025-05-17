@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/csv"
 	"flag"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -14,15 +15,27 @@ import (
 
 func main() {
 	base_url := flag.String("url", "https://en.wikipedia.org/wiki/Web_scraping", "The base URL to scrape from")
-	csv := flag.String("csv-headers", "", "path to csv with headers that will be scraped")
+	csv_headers := flag.String("csv-headers", "", "path to csv with headers that will be scraped")
 	colly := flag.Bool("colly", false, "Boolean for if you want to use colly (default false)")
 
 	flag.Parse()
 
+	fName := "data.csv"
+	file, err := os.Create(fName)
+	if err != nil {
+		log.Fatalf("could not create file, err: %q", err)
+		return
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
 	if *colly == true {
 		log.Println("using colly...")
 		use_colly(*base_url)
-		os.Exit(0)
+		colly_tables(*writer)
+		return
 	}
 
 	log.Print(*base_url)
@@ -31,10 +44,10 @@ func main() {
 		"Dataset Name", "Description",
 	}
 
-	if len(*csv) == 0 {
+	if len(*csv_headers) == 0 {
 		log.Printf("Using default headers: %s", headers)
 	} else {
-		_, err := read_csv(*csv)
+		_, err := read_csv(*csv_headers)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -59,7 +72,23 @@ func main() {
 	defer resp.Body.Close()
 }
 
+func colly_tables(writer csv.Writer) {
+	c := colly.NewCollector()
+	c.OnHTML("table#customers", func(e *colly.HTMLElement) {
+		e.ForEach("tr", func(_ int, el *colly.HTMLElement) {
+			writer.Write([]string{
+				el.ChildText("td:nth-child(1)"),
+				el.ChildText("td:nth-child(2)"),
+				el.ChildText("td:nth-child(3)"),
+			})
+		})
+		fmt.Println("Scrapping Complete")
+	})
+	c.Visit("https://www.w3schools.com/html/html_tables.asp")
+}
+
 func use_colly(url string) {
+
 	c := colly.NewCollector(
 		colly.AllowedDomains("en.wikipedia.org"),
 	)
