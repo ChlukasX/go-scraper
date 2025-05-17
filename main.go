@@ -8,14 +8,22 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gocolly/colly"
 	"golang.org/x/net/html"
 )
 
 func main() {
-	base_url := flag.String("url", "https://archive.ics.uci.edu/datasets", "The base URL to scrape from")
+	base_url := flag.String("url", "https://en.wikipedia.org/wiki/Web_scraping", "The base URL to scrape from")
 	csv := flag.String("csv-headers", "", "path to csv with headers that will be scraped")
+	colly := flag.Bool("colly", false, "Boolean for if you want to use colly (default false)")
 
 	flag.Parse()
+
+	if *colly == true {
+		log.Println("using colly...")
+		use_colly(*base_url)
+		os.Exit(0)
+	}
 
 	log.Print(*base_url)
 
@@ -49,6 +57,20 @@ func main() {
 		}
 	}
 	defer resp.Body.Close()
+}
+
+func use_colly(url string) {
+	c := colly.NewCollector(
+		colly.AllowedDomains("en.wikipedia.org"),
+	)
+
+	c.OnHTML(".mw-parser-output", func(e *colly.HTMLElement) {
+		links := e.ChildAttrs("a", "href")
+		for _, link := range links {
+			log.Printf("link: %s\n", link)
+		}
+	})
+	c.Visit(url)
 }
 
 func fetch_site(url string) (*http.Response, error) {
