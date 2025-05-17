@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/csv"
 	"flag"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -11,15 +10,19 @@ import (
 )
 
 func main() {
+	base_url := flag.String("url", "https://archive.ics.uci.edu/datasets", "The base URL to scrape from")
+	csv := flag.String("csv-headers", "", "path to csv with headers that will be scraped")
+
+	flag.Parse()
+
+	log.Print(*base_url)
+
 	headers := [...]string{
 		"Dataset Name", "Description",
 	}
 
-	base_url := flag.String("url", "https://archive.ics.uci.edu/datasets", "The base URL to scrape from")
-	csv := flag.String("csv-headers", "", "path to csv with headers that will be scraped")
-
 	if len(*csv) == 0 {
-		fmt.Printf("Using default headers: %s", headers)
+		log.Printf("Using default headers: %s", headers)
 	} else {
 		_, err := read_csv(*csv)
 		if err != nil {
