@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"golang.org/x/net/html"
 )
 
 func main() {
@@ -30,24 +32,46 @@ func main() {
 		}
 	}
 
-	body, err := fetch_site(*base_url)
+	resp, err := fetch_site(*base_url)
 	if err != nil {
 		log.Fatal(err)
 	}
-	println(string(body))
+	body, err := io.ReadAll(resp.Body)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Print(string(body))
+
+	if rootNode, err := html.Parse(resp.Body); err == nil {
+		for _, link := range findLinks(rootNode) {
+			log.Printf("link: %s\n", link)
+		}
+	}
+	defer resp.Body.Close()
 }
 
-func fetch_site(url string) ([]byte, error) {
+func fetch_site(url string) (*http.Response, error) {
 	if resp, err := http.Get(url); err == nil {
-		defer resp.Body.Close()
-		if body, err := io.ReadAll(resp.Body); err == nil {
-			return body, nil
-		} else {
-			return nil, err
-		}
+		return resp, nil
 	} else {
 		return nil, err
 	}
+}
+
+func findLinks(n *html.Node) (links []string) {
+	if n.Type == html.ElementNode && n.Data == "a" {
+		for _, attr := range n.Attr {
+			if attr.Key == "href" {
+				links = append(links, attr.Val)
+			}
+		}
+	}
+
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		links = append(links, findLinks(c)...)
+	}
+	return links
 }
 
 func read_csv(path string) ([]string, error) {
