@@ -7,10 +7,10 @@ import (
 )
 
 type ScrapeTarget struct {
-	Name string `yaml:"name"`
-	StartUrl string `yaml:"start_url"`
+	Name           string   `yaml:"name"`
+	StartUrl       string   `yaml:"start_url"`
 	AllowedDomains []string `yaml:"allowed_domains"`
-	ItemSelector string `yaml:"item_selector"`
+	ItemSelector   string   `yaml:"item_selector"`
 }
 
 type Config struct {
@@ -31,4 +31,3 @@ func LoadConfig(path string) (*Config, error) {
 
 	return &config, nil
 }
-
