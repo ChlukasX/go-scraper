@@ -9,16 +9,23 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/chlukasx/scraper/internal/config"
+
 	"github.com/gocolly/colly"
 	"golang.org/x/net/html"
 )
 
 func main() {
 	base_url := flag.String("url", "https://en.wikipedia.org/wiki/Web_scraping", "The base URL to scrape from")
+	cfg_path := flag.String("config", "./config.yaml", "path to config file")
 	csv_headers := flag.String("csv-headers", "", "path to csv with headers that will be scraped")
 	colly := flag.Bool("colly", false, "Boolean for if you want to use colly (default false)")
 
 	flag.Parse()
+
+	cfg, err := config.LoadConfig(cfg_path)
+	if err != nil {
+		log.Fatalf("Error loading config: %v", err)
 
 	fName := "data.csv"
 	file, err := os.Create(fName)

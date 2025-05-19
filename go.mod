@@ -1,4 +1,4 @@
-module github.com/ChlukasX/go-scraper
+module github.com/ChlukasX/scraper
 
 go 1.24.3
 
