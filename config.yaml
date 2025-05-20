@@ -1,0 +1,5 @@
+ScrapeTarget:
+  Name: "https://en.wikipedia.org/wiki/Web_scraping"
+  ItemSelector: "div.content"
+  AllowedDomains: ["https://en.wikipedia.org/wiki/Web_scraping"]
+  StartURL: "https://en.wikipedia.org/wiki/Web_scraping"

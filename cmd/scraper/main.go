@@ -1,19 +1,12 @@
 package main
 
 import (
-	"encoding/csv"
 	"flag"
 	"fmt"
-	"io"
 	"log"
-	"net/http"
-	"os"
 
 	"github.com/ChlukasX/scraper/internal/config"
-	"github.com/ChlukasX/scraper/internal/storage"
-
-	"github.com/gocolly/colly"
-	"golang.org/x/net/html"
+	"github.com/ChlukasX/scraper/internal/scraper"
 )
 
 func main() {
@@ -21,19 +14,16 @@ func main() {
 
 	flag.Parse()
 
-	cfg, err := config.LoadConfig(cfg_path)
+	cfg, err := config.New(*cfg_path)
 	if err != nil {
 		log.Fatalf("Error loading config: %v", err)
-
-	dataStore, err := storage.New("sqlite")
-	if err != nil {
-		log.Fatalf("Error creating data store: %v", err)
 	}
-	defer dataStore.Close()
 
-	scraper := Scraper.New(cfg, dataStore)
+	fmt.Print(cfg.ScrapeTarget)
 
-	err = scraper.Start(cfg.StartUrl)
+	scraper := scraper.New(cfg)
+
+	err = scraper.Start(cfg.ScrapeTarget.StartUrl)
 	if err != nil {
 		log.Fatalf("Scraping error: %v", err)
 	}
