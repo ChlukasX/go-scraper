@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 
 	"gopkg.in/yaml.v3"
@@ -14,20 +15,34 @@ type ScrapeTarget struct {
 }
 
 type Config struct {
-	ScrapeTarget []ScrapeTarget `yaml:"scrape_targets"`
+	ScrapeTarget ScrapeTarget `yaml:"scrape_targets"`
 }
 
-func LoadConfig(path string) (*Config, error) {
-	cfgf, err := os.ReadFile(path)
+func New(path string) (*Config, error) {
+	cfg := &Config{}
+
+	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
+	defer f.Close()
 
-	var config Config
-	err = yaml.Unmarshal(cfgf, &config)
-	if err != nil {
+	d := yaml.NewDecoder(f)
+
+	if err := d.Decode(&cfg); err != nil {
 		return nil, err
 	}
 
-	return &config, nil
+	return cfg, nil
+}
+
+func ValidateConfigPath(path string) error {
+	s, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+	if !s.IsDir() {
+		return fmt.Errorf("%s is not a directory", path)
+	}
+	return nil
 }
