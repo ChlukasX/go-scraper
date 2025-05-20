@@ -1,8 +1,9 @@
 package scraper
 
 import (
+	"fmt"
+
 	"github.com/ChlukasX/scraper/internal/config"
-	"github.com/ChlukasX/scraper/internal/storage"
 
 	"github.com/gocolly/colly"
 )
@@ -10,17 +11,27 @@ import (
 type Scraper struct {
 	collector *colly.Collector
 	config    *config.Config
-	storage   storage.DataStore
 }
 
-func New(cfg *config.Config, store storage.DataStore) *Scraper {
+func (s *Scraper) Start(url string) error {
+
+	s.collector.OnHTML(string(s.config.ScrapeTarget.Name), func(e *colly.HTMLElement) {
+		links := e.ChildAttrs("a", "href")
+		for _, link := range links {
+			fmt.Printf("link: %s\n", link)
+		}
+	})
+	s.collector.Visit(s.config.ScrapeTarget.StartUrl)
+	return nil
+}
+
+func New(cfg *config.Config) *Scraper {
 	c := colly.NewCollector(
-		colly.AllowedDomains(),
+		colly.AllowedDomains(cfg.ScrapeTarget.AllowedDomains...),
 	)
 
 	return &Scraper{
 		collector: c,
 		config:    cfg,
-		storage:   store,
 	}
 }
